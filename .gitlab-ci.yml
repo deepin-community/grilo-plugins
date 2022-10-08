@@ -1,0 +1,88 @@
+image: fedora:latest
+
+variables:
+  DEPENDENCIES_GRILO:
+    gobject-introspection-devel
+    libxml2-devel
+    libsoup-devel
+    glib2-devel
+    gtk3-devel
+    liboauth-devel
+    totem-pl-parser-devel
+    meson
+    redhat-rpm-config
+    gcc
+    gcc-c++
+    glibc-devel
+    git
+    vala
+    gtk-doc
+
+  DEPENDENCIES:
+    sqlite-devel
+    libgcrypt-devel
+    itstool
+    lua-devel
+    gperf
+    libarchive-devel
+    json-glib-devel
+    avahi-gobject-devel
+    rest-devel
+    libdmapsharing-devel
+    libmediaart-devel
+    gom-devel
+    gnome-online-accounts-devel
+    libgdata-devel
+    gstreamer1-plugins-good
+    gstreamer1-plugins-bad-free-extras
+    python3-gobject-base
+    dbus-daemon
+    tracker-miners
+    tracker-devel
+    upower
+
+build_stable:
+  before_script:
+    - dnf update -y --nogpgcheck
+  script:
+    - dnf install -y --nogpgcheck $DEPENDENCIES_GRILO $DEPENDENCIES
+    # As part of configuring grilo-plugins.git for build, the latest code from
+    # grilo.git will be fetched by Meson and it will be built as a subproject.
+    - meson . _build --prefix=/usr
+      -Denable-bookmarks=yes
+      -Denable-chromaprint=yes
+      -Denable-dleyna=yes
+      -Denable-dmap=yes
+      -Denable-filesystem=yes
+      -Denable-flickr=yes
+      -Denable-freebox=yes
+      -Denable-gravatar=yes
+      -Denable-jamendo=yes
+      -Denable-local-metadata=yes
+      -Denable-lua-factory=yes
+      -Denable-magnatune=yes
+      -Denable-metadata-store=yes
+      -Denable-opensubtitles=yes
+      -Denable-optical-media=yes
+      -Denable-podcasts=yes
+      -Denable-raitv=yes
+      -Denable-shoutcast=yes
+      -Denable-thetvdb=yes
+      -Denable-tmdb=yes
+      -Denable-tracker3=yes
+      -Denable-vimeo=yes
+      -Denable-youtube=yes
+    - ninja -C _build
+    - ninja -C _build install
+    # Start a system bus for upower
+    - mkdir -p /run/dbus
+    - mkdir -p /var
+    - ln -s /var/run /run
+    - dbus-daemon --system --fork
+    - /usr/libexec/upowerd &
+    - LANG=C.UTF-8 dbus-run-session meson test -C _build --suite=grilo-plugins
+  artifacts:
+    name: meson-logs
+    when: on_failure
+    paths:
+      - _build/meson-logs

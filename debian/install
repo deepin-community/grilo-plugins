@@ -1,0 +1,5 @@
+usr/lib/*/grilo-0.3/*.so
+usr/lib/*/pkgconfig
+usr/share/grilo-plugins
+usr/share/help
+usr/share/locale

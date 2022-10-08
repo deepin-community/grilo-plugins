@@ -1,0 +1,23 @@
+#!/usr/bin/make -f
+
+export DEB_BUILD_MAINT_OPTIONS = hardening=+all
+
+export CPPFLAGS = $(shell dpkg-buildflags --get CPPFLAGS) \
+	-DGLIB_DISABLE_DEPRECATION_WARNINGS \
+	-Wno-deprecated-declarations
+
+%:
+	dh $@
+
+override_dh_auto_configure:
+	dh_auto_configure -- \
+		-Denable-tracker=no \
+		-Denable-tracker3=yes
+
+override_dh_auto_install:
+	dh_auto_install --destdir=debian/tmp
+
+override_dh_auto_test:
+
+override_dh_missing:
+	dh_missing --fail-missing
